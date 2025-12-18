@@ -1,4 +1,4 @@
-﻿using login_page;
+using login_page;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -20,10 +20,9 @@ namespace Hospital_Management_System
             this.Size = new Size(900, 550);
             this.StartPosition = FormStartPosition.CenterScreen;
 
-            // ===== HEADER =====
             Panel header = new Panel()
             {
-                BackColor = Color.DarkBlue,
+                BackColor = Color.FromArgb(0, 117, 124),
                 Dock = DockStyle.Top,
                 Height = 60
             };
@@ -33,12 +32,11 @@ namespace Hospital_Management_System
                 ForeColor = Color.White,
                 Font = new Font("Segoe UI", 16, FontStyle.Bold),
                 AutoSize = true,
-                Location = new Point(20, 15)
+                Location = new Point(350, 20)
             };
             header.Controls.Add(title);
             Controls.Add(header);
 
-            // ===== PATIENT =====
             Label lblPatient = new Label() { Text = "Patient Name", Location = new Point(30, 90) };
             cmbPatient = new ComboBox()
             {
@@ -58,28 +56,25 @@ namespace Hospital_Management_System
                 Height = 60
             };
 
-            // ===== DOCTOR =====
             Label lblDoctor = new Label() { Text = "Doctor", Location = new Point(30, 210) };
             cmbDoctor = new ComboBox()
             {
                 Location = new Point(150, 210),
-                Width = 150,
+                Width = 200, 
                 DropDownStyle = ComboBoxStyle.DropDownList
             };
 
-            // ===== DATE & TIME =====
             Label lblDate = new Label() { Text = "Date", Location = new Point(30, 250) };
             dtDate = new DateTimePicker()
             {
                 Location = new Point(150, 250),
                 Format = DateTimePickerFormat.Short,
-                MinDate = DateTime.Today // 🚫 DISABLE PAST DATES
+                MinDate = DateTime.Today
             };
 
             Label lblTime = new Label() { Text = "Time", Location = new Point(30, 290) };
             txtTime = new TextBox() { Location = new Point(150, 290), Width = 150 };
 
-            // ===== BUTTONS =====
             Button btnAdd = CreateButton("Add", 30, 340, Color.FromArgb(0, 117, 124));
             btnAdd.Click += AddAppointment;
 
@@ -97,10 +92,9 @@ namespace Hospital_Management_System
             Button btnExit = CreateButton("Exit", 150, 390, Color.Black);
             btnExit.Click += (s, e) => Application.Exit();
 
-            // ===== GRID =====
             grid = new DataGridView()
             {
-                Location = new Point(350, 90),
+                Location = new Point(370, 90), 
                 Size = new Size(500, 300),
                 ReadOnly = true,
                 AllowUserToAddRows = false,
@@ -132,7 +126,8 @@ namespace Hospital_Management_System
                 Width = 100,
                 Height = 35,
                 BackColor = color,
-                ForeColor = Color.White
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
             };
         }
 
@@ -151,7 +146,8 @@ namespace Hospital_Management_System
             cmbDoctor.Items.Clear();
             for (int i = 0; i < service.doctorCount; i++)
             {
-                cmbDoctor.Items.Add(service.doctorName[i]);
+                string doctorDisplay = $"{service.doctorName[i]} ({service.doctorSpecialization[i]})";
+                cmbDoctor.Items.Add(doctorDisplay);
             }
             if (cmbDoctor.Items.Count > 0) cmbDoctor.SelectedIndex = 0;
         }
@@ -192,32 +188,22 @@ namespace Hospital_Management_System
 
         private void AddAppointment(object sender, EventArgs e)
         {
-            // 🚫 SECOND SAFETY CHECK (LOGIC LEVEL)
             if (dtDate.Value.Date < DateTime.Today)
             {
-                MessageBox.Show(
-                    "You cannot book an appointment for a past date.",
-                    "Invalid Date",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning
-                );
+                MessageBox.Show("You cannot book an appointment for a past date.", "Invalid Date", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            if (cmbPatient.SelectedIndex < 0 || cmbDoctor.SelectedIndex < 0)
+            if (cmbPatient.SelectedIndex < 0 || cmbDoctor.SelectedIndex < 0 || string.IsNullOrWhiteSpace(txtTime.Text))
             {
-                MessageBox.Show("Select Patient and Doctor");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(txtTime.Text))
-            {
-                MessageBox.Show("Enter appointment time");
+                MessageBox.Show("Please fill all fields (Patient, Doctor, and Time).");
                 return;
             }
 
             string patientName = cmbPatient.SelectedItem.ToString();
-            string doctorName = cmbDoctor.SelectedItem.ToString();
+
+            string selectedDoctorInfo = cmbDoctor.SelectedItem.ToString();
+            string doctorName = selectedDoctorInfo.Split('(')[0].Trim();
 
             service.AddAppointment(
                 patientName,
@@ -228,6 +214,7 @@ namespace Hospital_Management_System
             );
 
             LoadGrid();
+            txtTime.Clear();
         }
 
         private void DeleteAppointment(object sender, EventArgs e)
